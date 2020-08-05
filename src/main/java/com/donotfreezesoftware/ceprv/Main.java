@@ -74,7 +74,7 @@ public class Main
         //  is the SolarChargeControllerEvent object
         configuration.getCommon().addEventType( SolarChargeControllerEvent.class );
         configuration.getCommon().addEventType( GPSEvent.class );
-        
+        /*
         //----------------------------------------------------------------------
         CompilerArguments args2 = new CompilerArguments(configuration);		
         EPCompiled epCompiled1;
@@ -100,14 +100,15 @@ public class Main
         }
         EPStatement statement1 = runtime.getDeploymentService().getStatement(deployment.getDeploymentId(), "my-statement");
         EPStatement statement2 = runtime.getDeploymentService().getStatement(deployment2.getDeploymentId(), "my-statement-2");
-
         BatteryStateOfChargeLowListener bsoclListener = new BatteryStateOfChargeLowListener();
         statement1.addListener(bsoclListener);
         statement2.addListener(bsoclListener);
         mqttClient.setTheRuntime( runtime );
+        */
+
 
         
-        /*
+
         EPRuntime runtime = EPRuntimeProvider.getDefaultRuntime( configuration );
         mqttClient.setTheRuntime( runtime );
         
@@ -119,14 +120,18 @@ public class Main
         //
         // Step 3 - Create the EPL. Let's do something simple.
         //  Esper, Tell us when the Battery State of Charge percentage drops below 70%
-        String  anEPLQuery = "SELECT * FROM SolarChargeControllerEvent scce";
-        log.info("Compiling EPL");
-
-        
+        String  anEPLQuery = "@name('scce_selectall') SELECT * FROM SolarChargeControllerEvent scce";        
         EPDeployment deployment = compileDeploy( runtime, anEPLQuery );
-        deployment.getStatements()[0].addListener( bsoclListener );  
-        runtime.initialize();
-        */
+        EPStatement statement1 = runtime.getDeploymentService().getStatement(deployment.getDeploymentId(), "scce_selectall");
+        statement1.addListener(bsoclListener);
+
+        anEPLQuery = "@name('gpse_selectall') SELECT * FROM GPSEvent gpse";
+        EPDeployment deployment2 = compileDeploy( runtime, anEPLQuery );
+        runtime.getDeploymentService().getStatement(deployment2.getDeploymentId(), "gpse_selectall").addListener(bsoclListener);
+                
+                
+        //runtime.initialize();
+        
         
         //
         // Now wait...
