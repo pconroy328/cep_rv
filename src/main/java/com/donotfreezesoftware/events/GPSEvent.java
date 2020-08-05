@@ -50,4 +50,92 @@ public class GPSEvent extends MQTTMessage_POJO
             return null;
         }
     }
+    
+    //
+    // Don't forget getters and settors or you'll see an error like:
+    //  Exception in thread "main" java.lang.RuntimeException: com.espertech.esper.compiler.client.EPCompileException: 
+    //  Failed to validate filter expression 'gpse.distance=0': Failed to resolve property 'gpse.distance' to a 
+    //  stream or nested property in a stream [@name('gpse_rvhome') SELECT * FROM GPSEvent gpse WHERE gpse.distance=0]
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
+
+    public float getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(float latitude) {
+        this.latitude = latitude;
+    }
+
+    public float getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(float longitude) {
+        this.longitude = longitude;
+    }
+
+    public float getAltitude() {
+        return altitude;
+    }
+
+    public void setAltitude(float altitude) {
+        this.altitude = altitude;
+    }
+
+    public float getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(float speed) {
+        this.speed = speed;
+    }
+
+    public float getTrack() {
+        return track;
+    }
+
+    public void setTrack(float track) {
+        this.track = track;
+    }
+
+    public float getClimb() {
+        return climb;
+    }
+
+    public void setClimb(float climb) {
+        this.climb = climb;
+    }
+
+    public float getDistance() {
+        return distance;
+    }
+
+    public void setDistance(float distance) {
+        this.distance = distance;
+    }
+
+    public String getGDOP() {
+        return GDOP;
+    }
+
+    public void setGDOP(String GDOP) {
+        this.GDOP = GDOP;
+    }
+
+    public String getGeohash() {
+        return geohash;
+    }
+
+    public void setGeohash(String geohash) {
+        this.geohash = geohash;
+    }
+    
+    
 }

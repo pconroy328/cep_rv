@@ -5,7 +5,6 @@
  */
 package com.donotfreezesoftware.listeners;
 
-import com.donotfreezesoftware.events.SolarChargeControllerEvent;
 import com.espertech.esper.common.client.EventBean;
 import com.espertech.esper.runtime.client.EPRuntime;
 import com.espertech.esper.runtime.client.EPStatement;
@@ -13,19 +12,17 @@ import com.espertech.esper.runtime.client.UpdateListener;
 import org.slf4j.LoggerFactory;
 
 /**
- *  This is the object that's instantiated when the EPL Statement
- *  "Battery State of Charge < Threshhold" is triggered
- * 
+ *
  * @author pconroy
  */
-public class BatteryStateOfChargeLowListener implements UpdateListener 
+public class VehicleLocationListener implements UpdateListener 
 {
-    private static final org.slf4j.Logger   log = LoggerFactory.getLogger( BatteryStateOfChargeLowListener.class );    
+    private static final org.slf4j.Logger   log = LoggerFactory.getLogger( VehicleLocationListener.class );    
 
     @Override
     public void update (EventBean[] newEvents, EventBean[] oldEvents, EPStatement statement, EPRuntime runtime ) 
     {
-        log.info( "Battery State of Charge has dropped below the threshold" );
+        log.info( "Vehicle Location Listener has been invoked" );
         int numEvents = newEvents.length;
         
         

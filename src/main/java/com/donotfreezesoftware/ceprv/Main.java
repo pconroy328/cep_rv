@@ -7,7 +7,8 @@ package com.donotfreezesoftware.ceprv;
 
 import com.donotfreezesoftware.events.GPSEvent;
 import com.donotfreezesoftware.events.SolarChargeControllerEvent;
-import com.donotfreezesoftware.listeners.BatteryStateOfChargeLowListener;
+import com.donotfreezesoftware.listeners.BatteryStateOfChargeListener;
+import com.donotfreezesoftware.listeners.VehicleLocationListener;
 import com.espertech.esper.common.client.EPCompiled;
 import com.espertech.esper.common.client.configuration.Configuration;
 import com.espertech.esper.compiler.client.CompilerArguments;
@@ -66,75 +67,56 @@ public class Main
         
         EPCompiler compiler = EPCompilerProvider.getCompiler();
         Configuration   configuration = new Configuration();
-        //config.getCompiler().getLogging().setEnableCode(true)
-        configuration.getCompiler().getLogging().setEnableCode(true);
         
-        // Tell it what Event POJOs will be coming into the engine
-        //  That means Step 2 -- creating the POJO -- is done.  Our first Event POJO
-        //  is the SolarChargeControllerEvent object
+        // Enable more verbose debugging if you want to
+        //configuration.getCompiler().getLogging().setEnableCode(true);
+        
+        
+        // Tell Esper what Event POJOs will be coming into the engine
+        //  That means Step 2 -- creating the POJO -- is done.  
+        //  We've got two Events and two event POJOs: SolarChageControllerEvent and 
+        //  the GPSEvent
         configuration.getCommon().addEventType( SolarChargeControllerEvent.class );
         configuration.getCommon().addEventType( GPSEvent.class );
-        /*
-        //----------------------------------------------------------------------
-        CompilerArguments args2 = new CompilerArguments(configuration);		
-        EPCompiled epCompiled1;
-        EPCompiled epCompiled2;
-        try {
-          epCompiled1 = compiler.compile("@name('my-statement') select * from GPSEvent", args2);
-          epCompiled2 = compiler.compile("@name('my-statement-2') select * from SolarChargeControllerEvent", args2);
-        }
-        catch (EPCompileException ex) {
-          // handle exception here
-          throw new RuntimeException(ex);
-        }
-        EPRuntime runtime = EPRuntimeProvider.getDefaultRuntime(configuration);
-        EPDeployment deployment;
-        EPDeployment deployment2;
-        try {
-          deployment = runtime.getDeploymentService().deploy(epCompiled1);
-          deployment2 = runtime.getDeploymentService().deploy(epCompiled2);
-        }
-        catch (EPDeployException ex) {
-          // handle exception here
-          throw new RuntimeException(ex);
-        }
-        EPStatement statement1 = runtime.getDeploymentService().getStatement(deployment.getDeploymentId(), "my-statement");
-        EPStatement statement2 = runtime.getDeploymentService().getStatement(deployment2.getDeploymentId(), "my-statement-2");
-        BatteryStateOfChargeLowListener bsoclListener = new BatteryStateOfChargeLowListener();
-        statement1.addListener(bsoclListener);
-        statement2.addListener(bsoclListener);
-        mqttClient.setTheRuntime( runtime );
-        */
-
-
         
 
+        //
+        // Setup the Esper Runtime - passing in the configuration
+        // We'll need that runtime reference passed into the MQTT Client object too
         EPRuntime runtime = EPRuntimeProvider.getDefaultRuntime( configuration );
         mqttClient.setTheRuntime( runtime );
         
-        //
-        // Step 2 - Create a POJO for every Event type that'll be coming in. Done!
-        // Step 4 We need that Listener Object
-        BatteryStateOfChargeLowListener bsoclListener = new BatteryStateOfChargeLowListener();
-        
-        //
-        // Step 3 - Create the EPL. Let's do something simple.
-        //  Esper, Tell us when the Battery State of Charge percentage drops below 70%
-        String  anEPLQuery = "@name('scce_selectall') SELECT * FROM SolarChargeControllerEvent scce";        
-        EPDeployment deployment = compileDeploy( runtime, anEPLQuery );
-        EPStatement statement1 = runtime.getDeploymentService().getStatement(deployment.getDeploymentId(), "scce_selectall");
-        statement1.addListener(bsoclListener);
 
-        anEPLQuery = "@name('gpse_selectall') SELECT * FROM GPSEvent gpse";
-        EPDeployment deployment2 = compileDeploy( runtime, anEPLQuery );
-        runtime.getDeploymentService().getStatement(deployment2.getDeploymentId(), "gpse_selectall").addListener(bsoclListener);
-                
-                
-        //runtime.initialize();
-        
+        //
+        //  For every unique Event Pattern we're going to detect, there should be a Listener
+        //  Object.  This is the object that gets invoked when the Event Pattern is seen
         
         //
-        // Now wait...
+        //  Let's say we're interested when the "Battery State of Charge" drops below
+        //  70% as that could be damaging to the battery.  
+        BatteryStateOfChargeListener bsocListener = new BatteryStateOfChargeListener();
+        
+        //
+        // Now let's create the EPL that tells Esper to let us know when the Battery State of Charge
+        //  drops below 70%! 
+        // Every EPL statement has a unique name. It gets compiled, deployed and the Listener Class
+        //  is associated with it
+        String  anEPLQuery = "@name('scce_batterysoclow') SELECT * FROM SolarChargeControllerEvent scce WHERE scce.batterySOC < 70";        
+        EPDeployment deployment = compileDeploy( runtime, anEPLQuery );
+        runtime.getDeploymentService().getStatement( deployment.getDeploymentId(), "scce_batterysoclow" ).addListener( bsocListener );
+
+        
+        //
+        // Let's keep going. For GPS, tell us when we're home! We know we're home when the geohash matches our home's
+        //  location.
+        VehicleLocationListener rvHomeListener = new VehicleLocationListener();
+        anEPLQuery = "@name('gpse_rvhome') SELECT * FROM GPSEvent gpse WHERE gpse.geohash='9xj78tt6'";
+        EPDeployment deployment2 = compileDeploy( runtime, anEPLQuery );
+        runtime.getDeploymentService().getStatement( deployment2.getDeploymentId(), "gpse_rvhome" ).addListener(rvHomeListener);
+                        
+        
+        //
+        // Now wait and just process events
         while (true) {
             try { Thread.sleep( 1000 ); } catch (Exception ex) { break; }
         }
