@@ -6,6 +6,7 @@
 package com.donotfreezesoftware.events;
 
 import com.google.gson.annotations.SerializedName;
+import org.slf4j.LoggerFactory;
 
 /**
  *  All of the MQTT Events share common attributes.
@@ -17,7 +18,7 @@ public class MQTTMessage_POJO
 {
     //
     //  This MUST be static, or GSON just enters an infinite loop
-    private static  final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger( "MQTTMessage_POJO" );
+    private static final org.slf4j.Logger   log = LoggerFactory.getLogger( MQTTMessage_POJO.class );    
     
     //
     // These are the common attributes across all MQTT messages coming in

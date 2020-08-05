@@ -5,14 +5,15 @@
  */
 package com.donotfreezesoftware.ceprv;
 
+import com.donotfreezesoftware.events.GPSEvent;
 import com.donotfreezesoftware.events.MQTTMessage_POJO;
 import com.donotfreezesoftware.events.SolarChargeControllerEvent;
+import com.espertech.esper.runtime.client.EPRuntime;
 import java.util.Random;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -25,10 +26,17 @@ import org.slf4j.LoggerFactory;
  */
 public class MQTTClient implements MqttCallback 
 {
-    private static  final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger( "MQTTClient" );
+    private static final org.slf4j.Logger   log = LoggerFactory.getLogger( MQTTClient.class );    
     
     private String brokerURL;
     private MqttAsyncClient aClient;
+    
+    //
+    // In order to send an event into the Esper Engine, we need to call Runtime.sendEvent()
+    // So our choice is to pass the event over to the class with the Runtime or pass
+    // the Runtime reference to the class that gets the event.
+    // I'm doing the second
+    EPRuntime   theRuntime;
     
 
     
@@ -52,16 +60,32 @@ public class MQTTClient implements MqttCallback
         // log.debug( "Message arrived. Topic [" + topic + "] Payload [" + jsonMessage + "]" );
         
         MQTTMessage_POJO    anEvent = null;
+        //String              eventName = null;
         
         //
         // Now figure out the event based on the topic
         if (topic.equalsIgnoreCase( "SCC/1/DATA" ) ) {
             anEvent = SolarChargeControllerEvent.fromJson( jsonPayload );
-        //
-        // Send the event into Esper's Runtime engine
-        //if (this.cepRuntime != null && anEvent != null) {
-        //    cepRuntime.sendEvent( anEvent );
-        //}
+            //eventName = "SolarChargeControllerEvent";
+            
+        } else if (topic.equalsIgnoreCase( "GPS") ) {
+            anEvent = GPSEvent.fromJson( jsonPayload );
+            //eventName = "GPSEvent";
+        }
+        
+        if (anEvent != null) {
+            log.info( "Sending in an event from topic [" + topic + "]  Event class is: [" + anEvent.getClass().getSimpleName() + "]" );
+
+            //
+            // sendEventBean needs the name of the event and a String that matches
+            //  the class name. getName() returns the full package+class name.
+            //  getSimpleName() seems to return the class name w/out the package prepended
+            //
+            //  If you pass in a random string (like I passed in 'topic') then the engine
+            //  locks up. The MQTT threads end, no more messaages are processed
+            //           
+
+            theRuntime.getEventService().sendEventBean( anEvent, anEvent.getClass().getSimpleName() );
         }
     }
 
@@ -120,8 +144,31 @@ public class MQTTClient implements MqttCallback
         }
     }
     
+    
     public void connectionLost(Throwable thrwbl) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    
+    
+    public String getBrokerURL() {
+        return brokerURL;
+    }
+
+    public void setBrokerURL(String brokerURL) {
+        this.brokerURL = brokerURL;
+    }
+
+    public MqttAsyncClient getaClient() {
+        return aClient;
+    }
+
+    public void setaClient(MqttAsyncClient aClient) {
+        this.aClient = aClient;
+    }
+
+    public void setTheRuntime(EPRuntime theRuntime) {
+        this.theRuntime = theRuntime;
     }
         
 }

@@ -7,6 +7,7 @@ package com.donotfreezesoftware.events;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import org.slf4j.LoggerFactory;
 
 /**
  * POJO Class that represents this JSON data packet from the Solar Charge Controller"
@@ -54,7 +55,7 @@ public class SolarChargeControllerEvent extends MQTTMessage_POJO
 {
     //
     //  This MUST be static, or GSON just enters an infinite loop
-    private static  final org.apache.log4j.Logger log = org.apache.log4j.Logger.getLogger( "SolarChargeControllerEvent" );
+    private static final org.slf4j.Logger   log = LoggerFactory.getLogger( SolarChargeControllerEvent.class );    
     
     //
     //  We're using Google GSON to parse the JSON
@@ -124,7 +125,7 @@ public class SolarChargeControllerEvent extends MQTTMessage_POJO
             
             return scce;
         } catch (Exception ex) {
-            log.error( "Unable to parse json message into a SolarChargeControllerEventObject (" + jsonMessage + ")", ex);
+            log.error( "Unable to parse json message into a SolarChargeControllerEvent Object (" + jsonMessage + ")", ex);
             return null;
         }
     }
