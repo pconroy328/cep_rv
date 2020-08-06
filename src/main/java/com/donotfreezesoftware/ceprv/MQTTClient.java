@@ -66,14 +66,13 @@ public class MQTTClient implements MqttCallback
         // Now figure out the event based on the topic
         if (topic.equalsIgnoreCase( "SCC/1/DATA" ) ) {
             anEvent = SolarChargeControllerEvent.fromJson( jsonPayload );
-            //eventName = "SolarChargeControllerEvent";
-            
+
         } else if (topic.equalsIgnoreCase( "GPS") ) {
             anEvent = GPSEvent.fromJson( jsonPayload );
-            //eventName = "GPSEvent";
         }
         
         if (anEvent != null) {
+            anEvent.setDateTimeFromString( anEvent.getDateTimeString() );
             log.info( "Sending in an event from topic [" + topic + "]  Event class is: [" + anEvent.getClass().getSimpleName() + "]" );
 
             //

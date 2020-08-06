@@ -114,6 +114,14 @@ public class SolarChargeControllerEvent extends MQTTMessage_POJO
 
     
     // -------------------------------------------------------------------------
+    //  Create a simple Constructor so the superclass fields get initalized
+    //  by Gson deserialization
+    public  SolarChargeControllerEvent ()
+    {
+        super();
+    }
+    
+    // -------------------------------------------------------------------------
     public static SolarChargeControllerEvent fromJson (String jsonMessage )
     {
         Gson    gson = new Gson();

@@ -58,12 +58,8 @@ public class Main
         
         //
         // Step 1 - Esper Engine Initial Setup
-        //      1.1)    You need to get a reference to the Compiler to compile the EPL
-        //      1.2)    You need a configuration object
-        //          1.2.1)  Tell the Configuration object what Event POJOs will be arriving
-        //      1.3)    You need a reference to a Runtime - there are several options, we'll use the default
-        //          1.3.1)  Pass in the configuration object
-        //          1.3.2)  Initialize the runtime
+        //  1.1) You need to get a reference to the Compiler to compile the EPL
+        //  1.2) You need a configuration object
         
         EPCompiler compiler = EPCompilerProvider.getCompiler();
         Configuration   configuration = new Configuration();
@@ -113,8 +109,15 @@ public class Main
         anEPLQuery = "@name('gpse_rvhome') SELECT * FROM GPSEvent gpse WHERE gpse.geohash='9xj78tt6'";
         EPDeployment deployment2 = compileDeploy( runtime, anEPLQuery );
         runtime.getDeploymentService().getStatement( deployment2.getDeploymentId(), "gpse_rvhome" ).addListener(rvHomeListener);
-                        
+
         
+        //
+        // Now we can sit back and let MQTT and Esper do their thing.
+        //  1. MQTTClient will be receiving events from the broker. The JSON events
+        //     will be inflated into POJOs and sent into the Esper runtime engine.
+        //  2. Esper's engine will watch the event stream waiting for those patterns
+        //     described by the EPL statements to appear. When they do, the matching
+        //     Listener objects will be invoked!
         //
         // Now wait and just process events
         while (true) {
@@ -123,7 +126,14 @@ public class Main
         log.error( "Exiting" );
     }
     
-    public static EPDeployment compileDeploy (EPRuntime runtime, String epl) {
+    // -------------------------------------------------------------------------
+    public static EPDeployment compileDeploy (EPRuntime runtime, String epl) 
+    {
+        //
+        // This method appears in the Esper documentation for migrating 
+        //  older code (before v8) over to the new approach that's in V8 and up
+        //  It's a helper method.
+        //
         try {
             // Obtain a copy of the engine configuration
             Configuration configuration = runtime.getConfigurationDeepCopy();

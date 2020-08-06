@@ -33,7 +33,14 @@ public class GPSEvent extends MQTTMessage_POJO
     @SerializedName("GDOP")         String  GDOP;
     @SerializedName("geohash")      String  geohash;
     
-    
+    // -------------------------------------------------------------------------
+    //  Create a simple Constructor so the superclass fields get initalized
+    //  by Gson deserialization
+    public  GPSEvent ()
+    {
+        super();
+    }
+
     // -------------------------------------------------------------------------
     public static GPSEvent fromJson (String jsonMessage )
     {

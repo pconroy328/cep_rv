@@ -6,6 +6,11 @@
 package com.donotfreezesoftware.events;
 
 import com.google.gson.annotations.SerializedName;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.List;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -28,14 +33,22 @@ public class MQTTMessage_POJO
     
     //
     // Add a couple of attributes that we'll find useful
-    protected   long        createdOn;          // millis when message was instantiated
-    protected   String      jsonPayload;        // the entire JSON message
+    protected   LocalDateTime   localDateTime;           // convert dateTimeString
+    protected   long            createdOn;          // millis when message was instantiated
+    protected   String          jsonPayload;        // the entire JSON message
    
     
     //
-    // Don't need a superclass constructor. Gson seems to know how to fill in the
-    //  superclass attributes when parsing the subclass
+    // Don't need a superclass constructor. But do need a subclass ctor!
+    //  Then Gson seems to know how to fill in the superclass attributes when 
+    //  parsing the subclass. But with a Superclass constructor we can do something
+    //  useful - like parsing out the ISO8601 Date/Time string into a Java Localized
+    //  datetime object
     //
+    public  MQTTMessage_POJO ()
+    {
+        log.info( "Super ctor called" );
+    }
     
     //
     //  NetBeans IDE Generated getters and setters
@@ -79,7 +92,58 @@ public class MQTTMessage_POJO
         this.jsonPayload = jsonPayload;
     }
     
+    // -------------------------------------------------------------------------
+    public  void setDateTimeFromString (String dateTimeStr)
+    {
+        if (dateTimeStr == null) {
+            log.error( "Passed in a null dateTimeString to parse" );
+            localDateTime = LocalDateTime.now();
+            return;
+        }
+        
+        
+        try {
+            localDateTime = LocalDateTime.parse( dateTimeStr, DateTimeFormatter.ISO_OFFSET_DATE_TIME );
+            
+        } catch (DateTimeParseException pex) { 
+            try {
+                localDateTime = LocalDateTime.parse( dateTimeStr, DateTimeFormatter.ISO_DATE_TIME );
+            
+            } catch (DateTimeParseException pex2) { 
+                try {
+                    localDateTime = LocalDateTime.parse( dateTimeStr, DateTimeFormatter.ISO_ZONED_DATE_TIME );
+            
+                } catch (Exception ex) {
+                    
+                }
+            }
+        
+            log.error( "Unknown dataTime formatted string in message payload [" + dateTimeStr + "]" );
+            
+            List<String> formatStrings = Arrays.asList("yyyy-MM-dd'T'HH:mmX", 
+                        "yyyy-MM-dd'T'HH:mm:ss'Z'",   "yyyy-MM-dd'T'HH:mm:ssZ",
+                        "yyyy-MM-dd'T'HH:mm:ss",      "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                        "yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd HH:mm:ss", 
+                        "MM/dd/yyyy HH:mm:ss",        "MM/dd/yyyy'T'HH:mm:ss.SSS'Z'", 
+                        "MM/dd/yyyy'T'HH:mm:ss.SSSZ", "MM/dd/yyyy'T'HH:mm:ss.SSS", 
+                        "MM/dd/yyyy'T'HH:mm:ssZ",     "MM/dd/yyyy'T'HH:mm:ss", 
+                        "yyyy:MM:dd HH:mm:ss",        "yyyyMMdd", "yyyy-MM-dd'T'HH:mmZ");
+
+            for (String formatString : formatStrings) {
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatString);
+                    localDateTime = LocalDateTime.parse(dateTimeStr, formatter);
+                    break;
+                } catch (DateTimeParseException pex3) {
+                    /* do nothing */ ;
+                }
+            }
+            
+            if (localDateTime == null)
+                log.error( "Unable to parse this date time string [" + dateTimeStr + "]" );
+        }
     
+    }
 }
 
 
