@@ -41,13 +41,11 @@ public class MQTTMessage_POJO
     //
     // Don't need a superclass constructor. But do need a subclass ctor!
     //  Then Gson seems to know how to fill in the superclass attributes when 
-    //  parsing the subclass. But with a Superclass constructor we can do something
-    //  useful - like parsing out the ISO8601 Date/Time string into a Java Localized
-    //  datetime object
+    //  parsing the subclass. You can't do much in here because Gson has called
+    //  this ctor before anything has been deserialized
     //
     public  MQTTMessage_POJO ()
     {
-        log.info( "Super ctor called" );
     }
     
     //
@@ -100,25 +98,18 @@ public class MQTTMessage_POJO
             localDateTime = LocalDateTime.now();
             return;
         }
-        
-        
+                
         try {
             localDateTime = LocalDateTime.parse( dateTimeStr, DateTimeFormatter.ISO_OFFSET_DATE_TIME );
             
-        } catch (DateTimeParseException pex) { 
-            try {
-                localDateTime = LocalDateTime.parse( dateTimeStr, DateTimeFormatter.ISO_DATE_TIME );
+        } catch (DateTimeParseException pex) {  try {
+            localDateTime = LocalDateTime.parse( dateTimeStr, DateTimeFormatter.ISO_DATE_TIME );
             
-            } catch (DateTimeParseException pex2) { 
-                try {
-                    localDateTime = LocalDateTime.parse( dateTimeStr, DateTimeFormatter.ISO_ZONED_DATE_TIME );
+        } catch (DateTimeParseException pex2) { try {
+            localDateTime = LocalDateTime.parse( dateTimeStr, DateTimeFormatter.ISO_ZONED_DATE_TIME );
             
-                } catch (Exception ex) {
-                    
-                }
-            }
-        
-            log.error( "Unknown dataTime formatted string in message payload [" + dateTimeStr + "]" );
+        } catch (Exception ex) {  } }
+            log.info( "Unknown dateTime formatted string in message payload [" + dateTimeStr + "]" );
             
             List<String> formatStrings = Arrays.asList("yyyy-MM-dd'T'HH:mmX", 
                         "yyyy-MM-dd'T'HH:mm:ss'Z'",   "yyyy-MM-dd'T'HH:mm:ssZ",
@@ -142,7 +133,6 @@ public class MQTTMessage_POJO
             if (localDateTime == null)
                 log.error( "Unable to parse this date time string [" + dateTimeStr + "]" );
         }
-    
     }
 }
 

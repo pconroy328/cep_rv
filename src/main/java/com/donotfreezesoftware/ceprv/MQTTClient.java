@@ -60,7 +60,6 @@ public class MQTTClient implements MqttCallback
         // log.debug( "Message arrived. Topic [" + topic + "] Payload [" + jsonMessage + "]" );
         
         MQTTMessage_POJO    anEvent = null;
-        //String              eventName = null;
         
         //
         // Now figure out the event based on the topic
@@ -72,6 +71,7 @@ public class MQTTClient implements MqttCallback
         }
         
         if (anEvent != null) {
+            // Convinent place to parse the JSON date/time string into a Java LocalDateTime object
             anEvent.setDateTimeFromString( anEvent.getDateTimeString() );
             log.info( "Sending in an event from topic [" + topic + "]  Event class is: [" + anEvent.getClass().getSimpleName() + "]" );
 

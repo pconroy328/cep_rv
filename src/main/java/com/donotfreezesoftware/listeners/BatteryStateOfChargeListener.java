@@ -23,7 +23,7 @@ public class BatteryStateOfChargeListener implements UpdateListener
     private static final org.slf4j.Logger   log = LoggerFactory.getLogger(BatteryStateOfChargeListener.class );    
 
     @Override
-    public void update (EventBean[] newEvents, EventBean[] oldEvents, EPStatement statement, EPRuntime runtime ) 
+    public void update (EventBean[] newEvents, EventBean[] oldEvents, EPStatement statement, EPRuntime runtime) 
     {
         log.info( "Battery State of Charge has dropped below the threshold" );
         int numEvents = newEvents.length;
