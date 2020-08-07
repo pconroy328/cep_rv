@@ -35,15 +35,6 @@ public class Main
         PropertyConfigurator.configure( "/home/pconroy/NetBeansProjects/cep_rv/src/log4j.properties" );
 
         log.info( "Starting..." );
-        MQTTClient  mqttClient = new MQTTClient();
-        try {
-            mqttClient.connect( "tcp://gx100.local:1883", "esperrv" );
-            mqttClient.subscribe( "SCC/1/DATA" );
-            mqttClient.subscribe( "GPS" );
-        } catch (MqttException mqttEx) {
-            log.error( "Error!", mqttEx );
-        }
-        
         //
         // Remember the basic steps are:
         //  1) Esper Runtime/Compiler initial setup.   (Runtime was more or less the "Engine" in V7 and below)
@@ -80,7 +71,6 @@ public class Main
         // Setup the Esper Runtime - passing in the configuration
         // We'll need that runtime reference passed into the MQTT Client object too
         EPRuntime runtime = EPRuntimeProvider.getDefaultRuntime( configuration );
-        mqttClient.setTheRuntime( runtime );
         
 
         //
@@ -106,23 +96,34 @@ public class Main
         // Let's keep going. For GPS, tell us when we're home! We know we're home when the geohash matches our home's
         //  location.
         VehicleLocationListener rvHomeListener = new VehicleLocationListener();
-        anEPLQuery = "@name('gpse_rvhome') SELECT * FROM GPSEvent gpse WHERE gpse.geohash='9xj78tt6'";
+        anEPLQuery = "@name('gpse_rvhome') SELECT * FROM GPSEvent gpse WHERE gpse.geohash='9xj78abc'";
         EPDeployment deployment2 = compileDeploy( runtime, anEPLQuery );
-        runtime.getDeploymentService().getStatement( deployment2.getDeploymentId(), "gpse_rvhome" ).addListener(rvHomeListener);
+        runtime.getDeploymentService().getStatement( deployment2.getDeploymentId(), "gpse_rvhome" ).addListener( rvHomeListener );
 
         
         //
         // Now we can sit back and let MQTT and Esper do their thing.
-        //  1. MQTTClient will be receiving events from the broker. The JSON events
+        //  -  MQTTClient will be receiving events from the broker. The JSON events
         //     will be inflated into POJOs and sent into the Esper runtime engine.
-        //  2. Esper's engine will watch the event stream waiting for those patterns
+        //  -  Esper's engine will watch the event stream waiting for those patterns
         //     described by the EPL statements to appear. When they do, the matching
         //     Listener objects will be invoked!
         //
-        // Now wait and just process events
+        // Step 5 - Now wait and just process events
+        MQTTClient  mqttClient = new MQTTClient();
+        try {
+            mqttClient.connect( "tcp://gx100.local:1883", "esperrv" );
+            mqttClient.subscribe( "SCC/1/DATA" );
+            mqttClient.subscribe( "GPS" );
+            mqttClient.setTheRuntime( runtime );
+        } catch (MqttException mqttEx) {
+            log.error( "Error!", mqttEx );
+        }
+        
         while (true) {
             try { Thread.sleep( 1000 ); } catch (Exception ex) { break; }
         }
+        
         log.error( "Exiting" );
     }
     

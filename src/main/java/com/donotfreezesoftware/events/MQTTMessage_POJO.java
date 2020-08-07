@@ -130,8 +130,12 @@ public class MQTTMessage_POJO
                 }
             }
             
-            if (localDateTime == null)
+            //
+            // Still no luck?  Just set it to NOW
+            if (localDateTime == null) {
                 log.error( "Unable to parse this date time string [" + dateTimeStr + "]" );
+                localDateTime = LocalDateTime.now();
+            }
         }
     }
 }
