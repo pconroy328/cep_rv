@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  */
 public class BatteryStateOfChargeListener implements UpdateListener 
 {
-    private static final org.slf4j.Logger   log = LoggerFactory.getLogger(BatteryStateOfChargeListener.class );    
+    private static final org.slf4j.Logger   log = LoggerFactory.getLogger( BatteryStateOfChargeListener.class );    
 
     @Override
     public void update (EventBean[] newEvents, EventBean[] oldEvents, EPStatement statement, EPRuntime runtime) 
@@ -56,7 +56,7 @@ public class BatteryStateOfChargeListener implements UpdateListener
             //
             // First of all - are we harming the battery? Sun up or sun down?
             if (batterySOC <= 50) {
-                log.warn( "Battery State of Charge is too low! Possible Battery Damage occuring!");
+                log.warn( "Battery State of Charge is too low! Possible Battery Damage occuring!" );
                 log.warn( "Battery State of Charge is: " + batterySOC + "%  Voltage is: " + batteryVoltage + "V" );
                 
             } else if (batterySOC < 70 && !isNightTime) {
@@ -64,10 +64,19 @@ public class BatteryStateOfChargeListener implements UpdateListener
                 log.warn( "Battery State of Charge is: " + batterySOC + "%  Voltage is: " + batteryVoltage + "V" );
                 log.warn( "Solar Panel Voltage is: " + pvVoltage + "V  Current is: " + pvCurrent + "A" );
                 log.warn( "Load Voltage is: " + loadVoltage + "V  Current is: " + loadCurrent + "A" );
-                log.warn( "Battery Voltage is: " + batteryVoltage + "V  Temperatire is: " + batteryTemperature + "*F" );
+                log.warn( "Battery Voltage is: " + batteryVoltage + "V  Temperature is: " + batteryTemperature + "*F" );
                 
             } else if (batterySOC < 70 && isNightTime) {
                 log.warn( "Battery State of Charge is low! But the sun has set. Just monitor the situation" );
+            }
+            
+            //
+            // Second - the BatterySoC value itself isn't all that accurate.
+            // We get concerned if the battery voltage drops below 12.1V
+            if (batteryVoltage < 12.1) {
+                log.warn( "Battery State of Charge is too low, belowe 12.1V! Possible Battery Damage occuring!" );
+            } else if (batteryVoltage < 12.2) {
+                log.warn( "Battery State of Charge is low! Voltage is below 12.2" );
             }
         }
     }

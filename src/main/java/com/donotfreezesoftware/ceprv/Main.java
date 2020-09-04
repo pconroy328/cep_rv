@@ -6,8 +6,14 @@
 package com.donotfreezesoftware.ceprv;
 
 import com.donotfreezesoftware.events.GPSEvent;
+import com.donotfreezesoftware.events.HHBAlarmEvent;
+import com.donotfreezesoftware.events.HHBStatusEvent;
 import com.donotfreezesoftware.events.SolarChargeControllerEvent;
+import com.donotfreezesoftware.events.SystemInfoEvent;
 import com.donotfreezesoftware.listeners.BatteryStateOfChargeListener;
+import com.donotfreezesoftware.listeners.GarageDoorOpenListener;
+import com.donotfreezesoftware.listeners.HHBStatusListener;
+import com.donotfreezesoftware.listeners.SystemHealthListener;
 import com.donotfreezesoftware.listeners.VehicleLocationListener;
 import com.espertech.esper.common.client.EPCompiled;
 import com.espertech.esper.common.client.configuration.Configuration;
@@ -65,6 +71,9 @@ public class Main
         //  the GPSEvent
         configuration.getCommon().addEventType( SolarChargeControllerEvent.class );
         configuration.getCommon().addEventType( GPSEvent.class );
+        configuration.getCommon().addEventType( SystemInfoEvent.class );
+        configuration.getCommon().addEventType( HHBStatusEvent.class );
+        configuration.getCommon().addEventType( HHBAlarmEvent.class );
         
 
         //
@@ -100,7 +109,35 @@ public class Main
         EPDeployment deployment2 = compileDeploy( runtime, anEPLQuery );
         runtime.getDeploymentService().getStatement( deployment2.getDeploymentId(), "gpse_rvhome" ).addListener( rvHomeListener );
 
+
+        //
+        // Let's monitor the health of the SBC nodes in the motorhome
+        anEPLQuery = "@name('nodee_syshealth') SELECT * FROM SystemInfoEvent as sie WHERE sie.host LIKE '%rv%'";
+        EPDeployment deployment3 = compileDeploy( runtime, anEPLQuery );
+        runtime.getDeploymentService().getStatement( deployment3.getDeploymentId(), "nodee_syshealth" ).addListener( new SystemHealthListener() );
         
+        //
+        // 
+        anEPLQuery = "@name('hhbe_status') SELECT * FROM HHBStatusEvent as hhbe";
+        EPDeployment deployment4 = compileDeploy( runtime, anEPLQuery );
+        runtime.getDeploymentService().getStatement( deployment4.getDeploymentId(), "hhbe_status" ).addListener( new HHBStatusListener() );
+
+        //
+        // Let's get serious now - only close the garage door if the door has been open for 30 minutes and there's been no motion
+        //  in the garage for that time
+        //
+        //  IF the garage door (deviceType 24, MACAddress 000000B357 has a "state" : "OPEN" and a "duration"  > (30 * 60) seconds
+        //  AND if the garage motion sensor (deviceType 23 MACAddress 000000FF02 has a state of "NO MOTION"with a duration of >= (30 * 60) seconds
+        //  THEN the door's been open too long  
+
+        anEPLQuery = "@name('hhbe_garagedooropen') SELECT gde, gme " +
+                "FROM PATTERN [ EVERY " + 
+                "gde = HHBStatusEvent(macAddress='000000B357', deviceStatus='OPEN') -> " +
+                "gme = HHBStatusEvent(macAddress='000000FF02', deviceStatus='NO MOTION') ] " +
+                "WHERE (gde.statusDuration > 30 AND gde.statusDuration >= 30)";
+        
+        EPDeployment deployment5 = compileDeploy( runtime, anEPLQuery );
+        runtime.getDeploymentService().getStatement( deployment5.getDeploymentId(), "hhbe_garagedooropen" ).addListener( new GarageDoorOpenListener() );
         //
         // Now we can sit back and let MQTT and Esper do their thing.
         //  -  MQTTClient will be receiving events from the broker. The JSON events
@@ -115,6 +152,9 @@ public class Main
             mqttClient.connect( "tcp://gx100.local:1883", "esperrv" );
             mqttClient.subscribe( "SCC/1/DATA" );
             mqttClient.subscribe( "GPS" );
+            mqttClient.subscribe( "NODE" );
+            mqttClient.subscribe( "HHB/STATUS" );
+            mqttClient.subscribe( "HHB/ALARM" );
             mqttClient.setTheRuntime( runtime );
         } catch (MqttException mqttEx) {
             log.error( "Error!", mqttEx );

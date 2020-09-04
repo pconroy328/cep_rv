@@ -6,8 +6,11 @@
 package com.donotfreezesoftware.ceprv;
 
 import com.donotfreezesoftware.events.GPSEvent;
+import com.donotfreezesoftware.events.HHBAlarmEvent;
+import com.donotfreezesoftware.events.HHBStatusEvent;
 import com.donotfreezesoftware.events.MQTTMessage_POJO;
 import com.donotfreezesoftware.events.SolarChargeControllerEvent;
+import com.donotfreezesoftware.events.SystemInfoEvent;
 import com.espertech.esper.runtime.client.EPRuntime;
 import java.util.Random;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -66,14 +69,23 @@ public class MQTTClient implements MqttCallback
         if (topic.equalsIgnoreCase( "SCC/1/DATA" ) ) {
             anEvent = SolarChargeControllerEvent.fromJson( jsonPayload );
 
-        } else if (topic.equalsIgnoreCase( "GPS") ) {
+        } else if (topic.equalsIgnoreCase( "GPS" ) ) {
             anEvent = GPSEvent.fromJson( jsonPayload );
+            
+        } else if (topic.equalsIgnoreCase( "NODE" ) ) {
+            anEvent = SystemInfoEvent.fromJson( jsonPayload );
+            
+        } else if (topic.equalsIgnoreCase( "HHB/STATUS" ) ) {
+            anEvent = HHBStatusEvent.fromJson( jsonPayload );
+            
+        } else if (topic.equalsIgnoreCase( "HHB/ALARM" ) ) {
+            anEvent = HHBAlarmEvent.fromJson( jsonPayload );
         }
         
         if (anEvent != null) {
             // Convinent place to parse the JSON date/time string into a Java LocalDateTime object
             anEvent.setDateTimeFromString( anEvent.getDateTimeString() );
-            log.info( "Sending in an event from topic [" + topic + "]  Event class is: [" + anEvent.getClass().getSimpleName() + "]" );
+            //log.info( "Sending in an event from topic [" + topic + "]  Event class is: [" + anEvent.getClass().getSimpleName() + "]" );
 
             //
             // sendEventBean needs the name of the event and a String that matches

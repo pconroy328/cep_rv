@@ -27,9 +27,9 @@ public class MQTTMessage_POJO
     
     //
     // These are the common attributes across all MQTT messages coming in
-    @SerializedName("topic")            String  topic;
-    @SerializedName("version")          String  version;
-    @SerializedName("dateTime")         String  dateTimeString;     // the date time as an ISO8601 String
+    @SerializedName("topic")            protected   String  topic;
+    @SerializedName("version")          protected   String  version;
+    @SerializedName("dateTime")         protected   String  dateTimeString;     // the date time as an ISO8601 String
     
     //
     // Add a couple of attributes that we'll find useful
@@ -94,7 +94,7 @@ public class MQTTMessage_POJO
     public  void setDateTimeFromString (String dateTimeStr)
     {
         if (dateTimeStr == null) {
-            log.error( "Passed in a null dateTimeString to parse" );
+            log.error( "Passed in a null dateTimeString to parse on topic [" + this.getTopic() + "]" );
             localDateTime = LocalDateTime.now();
             return;
         }
@@ -109,7 +109,7 @@ public class MQTTMessage_POJO
             localDateTime = LocalDateTime.parse( dateTimeStr, DateTimeFormatter.ISO_ZONED_DATE_TIME );
             
         } catch (Exception ex) {  } }
-            log.info( "Unknown dateTime formatted string in message payload [" + dateTimeStr + "]" );
+            //log.info( "Unknown dateTime formatted string in message payload [" + dateTimeStr + "]" );
             
             List<String> formatStrings = Arrays.asList("yyyy-MM-dd'T'HH:mmX", 
                         "yyyy-MM-dd'T'HH:mm:ss'Z'",   "yyyy-MM-dd'T'HH:mm:ssZ",
