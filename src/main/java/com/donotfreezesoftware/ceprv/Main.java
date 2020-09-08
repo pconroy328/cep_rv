@@ -155,6 +155,8 @@ public class Main
             mqttClient.subscribe( "NODE" );
             mqttClient.subscribe( "HHB/STATUS" );
             mqttClient.subscribe( "HHB/ALARM" );
+            mqttClient.subscribe( "WS2308/STATUS" );
+            mqttClient.subscribe( "WS2308/ALARM" );
             mqttClient.setTheRuntime( runtime );
         } catch (MqttException mqttEx) {
             log.error( "Error!", mqttEx );
