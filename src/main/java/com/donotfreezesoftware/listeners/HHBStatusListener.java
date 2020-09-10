@@ -37,11 +37,11 @@ public class HHBStatusListener implements UpdateListener
             boolean isTriggered = (Boolean) newEvents[0].get( "isTriggered" );
             String  macAddress = (String) newEvents[0].get( "macAddress" );
 
-            if (macAddress.equals( "000000B357" ))
+            /*if (macAddress.equals( "000000B357" ))
                 log.info( "GARAGE DOOR - [" + name + "]  State:[" + state + "]  Triggered: " + isTriggered + "  Duration: " + duration );
             else if (macAddress.equals( "000000FF02" ))
                 log.info( "GARAGE MOTION  - [" + name + "]  State:[" + state + "]  Triggered: " + isTriggered + "  Duration: " + duration );
-            
+            */
             //log.info( "HHBStatusEvent [" + name + "]  State:[" + state + "]  Triggered: " + isTriggered + "  Duration: " + duration );
         }
     }

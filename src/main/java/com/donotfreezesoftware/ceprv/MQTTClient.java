@@ -9,6 +9,7 @@ import com.donotfreezesoftware.events.GPSEvent;
 import com.donotfreezesoftware.events.HHBAlarmEvent;
 import com.donotfreezesoftware.events.HHBStatusEvent;
 import com.donotfreezesoftware.events.MQTTMessage_POJO;
+import com.donotfreezesoftware.events.OBD2StatusEvent;
 import com.donotfreezesoftware.events.SolarChargeControllerEvent;
 import com.donotfreezesoftware.events.SystemInfoEvent;
 import com.espertech.esper.runtime.client.EPRuntime;
@@ -80,6 +81,15 @@ public class MQTTClient implements MqttCallback
             
         } else if (topic.equalsIgnoreCase( "HHB/ALARM" ) ) {
             anEvent = HHBAlarmEvent.fromJson( jsonPayload );
+            
+        } else if (topic.equalsIgnoreCase( "OBD/STATUS" ) ) {
+            anEvent = OBD2StatusEvent.fromJson( jsonPayload );
+            
+        } else if (topic.equalsIgnoreCase( "WS2308/STATUS" ) ) {
+            // anEvent = HHBStatusEvent.fromJson( jsonPayload );
+            
+        } else if (topic.equalsIgnoreCase( "WS2308/ALARM" ) ) {
+            // anEvent = HHBAlarmEvent.fromJson( jsonPayload );
         }
         
         if (anEvent != null) {

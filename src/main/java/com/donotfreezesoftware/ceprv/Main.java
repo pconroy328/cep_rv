@@ -8,11 +8,13 @@ package com.donotfreezesoftware.ceprv;
 import com.donotfreezesoftware.events.GPSEvent;
 import com.donotfreezesoftware.events.HHBAlarmEvent;
 import com.donotfreezesoftware.events.HHBStatusEvent;
+import com.donotfreezesoftware.events.OBD2StatusEvent;
 import com.donotfreezesoftware.events.SolarChargeControllerEvent;
 import com.donotfreezesoftware.events.SystemInfoEvent;
 import com.donotfreezesoftware.listeners.BatteryStateOfChargeListener;
 import com.donotfreezesoftware.listeners.GarageDoorOpenListener;
 import com.donotfreezesoftware.listeners.HHBStatusListener;
+import com.donotfreezesoftware.listeners.OBDFuelLevelListener;
 import com.donotfreezesoftware.listeners.SystemHealthListener;
 import com.donotfreezesoftware.listeners.VehicleLocationListener;
 import com.espertech.esper.common.client.EPCompiled;
@@ -74,6 +76,7 @@ public class Main
         configuration.getCommon().addEventType( SystemInfoEvent.class );
         configuration.getCommon().addEventType( HHBStatusEvent.class );
         configuration.getCommon().addEventType( HHBAlarmEvent.class );
+        configuration.getCommon().addEventType( OBD2StatusEvent.class );
         
 
         //
@@ -138,6 +141,10 @@ public class Main
         
         EPDeployment deployment5 = compileDeploy( runtime, anEPLQuery );
         runtime.getDeploymentService().getStatement( deployment5.getDeploymentId(), "hhbe_garagedooropen" ).addListener( new GarageDoorOpenListener() );
+        
+        anEPLQuery = "@name('obde_fuellevel') SELECT * FROM OBD2StatusEvent ";
+        EPDeployment deployment6 = compileDeploy( runtime, anEPLQuery );
+        runtime.getDeploymentService().getStatement( deployment6.getDeploymentId(), "obde_fuellevel" ).addListener( new OBDFuelLevelListener() );
         //
         // Now we can sit back and let MQTT and Esper do their thing.
         //  -  MQTTClient will be receiving events from the broker. The JSON events
@@ -157,6 +164,8 @@ public class Main
             mqttClient.subscribe( "HHB/ALARM" );
             mqttClient.subscribe( "WS2308/STATUS" );
             mqttClient.subscribe( "WS2308/ALARM" );
+            mqttClient.subscribe( "OBD/STATUS" );
+            mqttClient.subscribe( "OBD/ALARM" );
             mqttClient.setTheRuntime( runtime );
         } catch (MqttException mqttEx) {
             log.error( "Error!", mqttEx );

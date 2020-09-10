@@ -94,7 +94,7 @@ public class MQTTMessage_POJO
     public  void setDateTimeFromString (String dateTimeStr)
     {
         if (dateTimeStr == null) {
-            log.error( "Passed in a null dateTimeString to parse on topic [" + this.getTopic() + "]" );
+            //log.error( "Passed in a null dateTimeString to parse on topic [" + this.getTopic() + "]" );
             localDateTime = LocalDateTime.now();
             return;
         }
