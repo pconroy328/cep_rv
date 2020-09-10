@@ -11,6 +11,8 @@ import com.donotfreezesoftware.events.HHBStatusEvent;
 import com.donotfreezesoftware.events.OBD2StatusEvent;
 import com.donotfreezesoftware.events.SolarChargeControllerEvent;
 import com.donotfreezesoftware.events.SystemInfoEvent;
+import com.donotfreezesoftware.events.WeatherAlarmEvent;
+import com.donotfreezesoftware.events.WeatherCurrentConditionsEvent;
 import com.donotfreezesoftware.listeners.BatteryStateOfChargeListener;
 import com.donotfreezesoftware.listeners.GarageDoorOpenListener;
 import com.donotfreezesoftware.listeners.HHBStatusListener;
@@ -77,6 +79,8 @@ public class Main
         configuration.getCommon().addEventType( HHBStatusEvent.class );
         configuration.getCommon().addEventType( HHBAlarmEvent.class );
         configuration.getCommon().addEventType( OBD2StatusEvent.class );
+        configuration.getCommon().addEventType( WeatherCurrentConditionsEvent.class );
+        configuration.getCommon().addEventType( WeatherAlarmEvent.class );
         
 
         //
@@ -154,19 +158,19 @@ public class Main
         //     Listener objects will be invoked!
         //
         // Step 5 - Now wait and just process events
-        MQTTClient  mqttClient = new MQTTClient();
+        //MQTTClient  mqttClient = MQTTClient.getInstance();
         try {
-            mqttClient.connect( "tcp://gx100.local:1883", "esperrv" );
-            mqttClient.subscribe( "SCC/1/DATA" );
-            mqttClient.subscribe( "GPS" );
-            mqttClient.subscribe( "NODE" );
-            mqttClient.subscribe( "HHB/STATUS" );
-            mqttClient.subscribe( "HHB/ALARM" );
-            mqttClient.subscribe( "WS2308/STATUS" );
-            mqttClient.subscribe( "WS2308/ALARM" );
-            mqttClient.subscribe( "OBD/STATUS" );
-            mqttClient.subscribe( "OBD/ALARM" );
-            mqttClient.setTheRuntime( runtime );
+            MQTTClient.getInstance().connect( "tcp://gx100.local:1883", "esperrv" );
+            MQTTClient.getInstance().subscribe( "SCC/1/DATA" );
+            MQTTClient.getInstance().subscribe( "GPS" );
+            MQTTClient.getInstance().subscribe( "NODE" );
+            MQTTClient.getInstance().subscribe( "HHB/STATUS" );
+            MQTTClient.getInstance().subscribe( "HHB/ALARM" );
+            MQTTClient.getInstance().subscribe( "WS2308/STATUS" );
+            MQTTClient.getInstance().subscribe( "WS2308/ALARM" );
+            MQTTClient.getInstance().subscribe( "OBD/STATUS" );
+            MQTTClient.getInstance().subscribe( "OBD/ALARM" );
+            MQTTClient.getInstance().setTheRuntime( runtime );
         } catch (MqttException mqttEx) {
             log.error( "Error!", mqttEx );
         }

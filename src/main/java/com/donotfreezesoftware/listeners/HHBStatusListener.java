@@ -5,6 +5,7 @@
  */
 package com.donotfreezesoftware.listeners;
 
+import com.donotfreezesoftware.ceprv.MQTTClient;
 import com.espertech.esper.common.client.EventBean;
 import com.espertech.esper.runtime.client.EPRuntime;
 import com.espertech.esper.runtime.client.EPStatement;
@@ -43,6 +44,7 @@ public class HHBStatusListener implements UpdateListener
                 log.info( "GARAGE MOTION  - [" + name + "]  State:[" + state + "]  Triggered: " + isTriggered + "  Duration: " + duration );
             */
             //log.info( "HHBStatusEvent [" + name + "]  State:[" + state + "]  Triggered: " + isTriggered + "  Duration: " + duration );
+            MQTTClient.getInstance().publishMessage( "CEP/HHB/GARAGE", "{ \"topic\":\"CEP/HHB/GARAGE\", \"message\":\"CLOSE DOOR\" }" );
         }
     }
 

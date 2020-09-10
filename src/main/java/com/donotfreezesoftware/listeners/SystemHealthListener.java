@@ -5,6 +5,7 @@
  */
 package com.donotfreezesoftware.listeners;
 
+import com.donotfreezesoftware.ceprv.MQTTClient;
 import com.espertech.esper.common.client.EventBean;
 import com.espertech.esper.runtime.client.EPRuntime;
 import com.espertech.esper.runtime.client.EPStatement;
@@ -37,7 +38,10 @@ public class SystemHealthListener implements UpdateListener
             int     xmt_errors = (Integer) newEvents[0].get( "xmt_errors" );
             int     rcv_errors = (Integer) newEvents[0].get( "rcv_errors" );
             
-            log.info( "System Health Info came in for host [" + host + "]" );
+            log.info( "CALLING PUBLISH System Health Info came in for host [" + host + "]" );
+            String message = "Host [" + host + "] CPU Temp: " + cpu_temp;
+           MQTTClient.getInstance().publishMessage( "CEP/NODE", "FRIBITZ" );
+
         }
     }
             

@@ -12,8 +12,12 @@ import com.donotfreezesoftware.events.MQTTMessage_POJO;
 import com.donotfreezesoftware.events.OBD2StatusEvent;
 import com.donotfreezesoftware.events.SolarChargeControllerEvent;
 import com.donotfreezesoftware.events.SystemInfoEvent;
+import com.donotfreezesoftware.events.WeatherAlarmEvent;
+import com.donotfreezesoftware.events.WeatherCurrentConditionsEvent;
 import com.espertech.esper.runtime.client.EPRuntime;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
@@ -40,9 +44,22 @@ public class MQTTClient implements MqttCallback
     // So our choice is to pass the event over to the class with the Runtime or pass
     // the Runtime reference to the class that gets the event.
     // I'm doing the second
-    EPRuntime   theRuntime;
+    private EPRuntime   theRuntime;
     
-
+    //
+    //  We're a Singleton
+    private static MQTTClient singleton = null; 
+    private MQTTClient() 
+    { 
+    } 
+  
+    // static method to create instance of Singleton class 
+    public static MQTTClient getInstance() 
+    { 
+        if (singleton == null) 
+            singleton = new MQTTClient(); 
+        return singleton; 
+    }
     
     // -------------------------------------------------------------------------
     //
@@ -61,7 +78,7 @@ public class MQTTClient implements MqttCallback
     {
         String  jsonPayload = new String( message.getPayload() );
         
-        // log.debug( "Message arrived. Topic [" + topic + "] Payload [" + jsonMessage + "]" );
+        log.info( "Message arrived. Topic [" + topic + "] Payload [" + jsonPayload + "]" );
         
         MQTTMessage_POJO    anEvent = null;
         
@@ -86,10 +103,10 @@ public class MQTTClient implements MqttCallback
             anEvent = OBD2StatusEvent.fromJson( jsonPayload );
             
         } else if (topic.equalsIgnoreCase( "WS2308/STATUS" ) ) {
-            // anEvent = HHBStatusEvent.fromJson( jsonPayload );
+            anEvent = WeatherCurrentConditionsEvent.fromJson( jsonPayload );
             
         } else if (topic.equalsIgnoreCase( "WS2308/ALARM" ) ) {
-            // anEvent = HHBAlarmEvent.fromJson( jsonPayload );
+            anEvent = WeatherAlarmEvent.fromJson( jsonPayload );
         }
         
         if (anEvent != null) {
@@ -111,11 +128,10 @@ public class MQTTClient implements MqttCallback
     }
 
     @Override
-    public void deliveryComplete(IMqttDeliveryToken imdt) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void deliveryComplete (IMqttDeliveryToken imdt) 
+    {
+        // don't care
     }
-
-    
     
     // -------------------------------------------------------------------------
     void    connect (String aBrokerURL, String aClientID) throws MqttException
@@ -153,7 +169,7 @@ public class MQTTClient implements MqttCallback
     // -------------------------------------------------------------------------
     public    void    subscribe (String topic)
     {
-        log.debug( "Calling subscribe to topic [" + topic + "]" );
+        log.info( "Calling subscribe to topic [" + topic + "]" );
         
         try {
             int QoS = 0;
@@ -165,12 +181,25 @@ public class MQTTClient implements MqttCallback
         }
     }
     
-    
-    public void connectionLost(Throwable thrwbl) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    // -------------------------------------------------------------------------
+    public void connectionLost(Throwable thrwbl) 
+    {
+        log.error( "Connection to the broker has been lost!" );
     }
 
-    
+    // -------------------------------------------------------------------------
+    public void publishMessage (String topic, String message)
+    {
+        try {
+            MqttMessage aMessage = new MqttMessage( message.getBytes() );
+            aMessage.setQos( 0 );
+        
+            aClient.publish( topic, aMessage );
+        } catch (MqttException ex) {
+            log.error( "MQTT Exception thrown trying to publish message", ex );
+            log.error( "    topic: {} message: {}", topic, message );
+        }
+    }
     
     public String getBrokerURL() {
         return brokerURL;
